@@ -24,6 +24,9 @@ jobs:
           cd backend
           npm install
 
+      - name: Dar permisos de ejecución a node_modules/.bin
+        run: chmod +x backend/node_modules/.bin/*
+
       - name: Ejecutar pruebas del backend
         run: |
           cd backend
