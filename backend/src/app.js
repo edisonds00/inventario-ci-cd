@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors"); // ← IMPORTANTE
-const { crearProducto, listarProductos } = require("./inventoryService");
+const { crearProducto, listarProductos, obtenerVersion } = require("./inventoryService");
 const app = express();
 app.use(cors()); // ← HABILITA CORS
 app.use(express.json()); // ← NECESARIO PARA PROCESAR JSON
@@ -21,4 +21,11 @@ app.post("/api/productos", (req, res) => {
     });
   }
 });
+
+//Obtener version de la API
+app.get("/api/version", (req, res) => {
+  const version = obtenerVersion();
+  res.json(version);
+});
+
 module.exports = app;
