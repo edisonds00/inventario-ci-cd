@@ -17,7 +17,13 @@ function crearProducto(data) {
 function listarProductos() {
   return [...productos];
 }
+
+function obtenerVersion() {
+  return { version: "1.0.0",};
+}
+
 module.exports = {
   crearProducto,
   listarProductos,
+  obtenerVersion
 };
