@@ -15,3 +15,9 @@ test("POST /api/ productos devuelve 400 si faltan campos", async () => {
   expect(respuesta.status).toBe(400);
   expect(respuesta.body.error).toBe("VALIDATION_ERROR");
 });
+
+test("GET /api/version devuelve la versión de la API", async () => {
+  const respuesta = await request(app).get("/api/version");
+  expect(respuesta.status).toBe(200);
+  expect(respuesta.body.version).toBe("1.0.0");
+});

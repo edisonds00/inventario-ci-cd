@@ -1,5 +1,5 @@
 const { captureRejectionSymbol } = require("supertest/lib/test");
-const { crearProducto, listarProducto } = require("./inventoryService");
+const { crearProducto, listarProducto, obtenerVersion } = require("./inventoryService");
 beforeEach(() => {
   jest.resetModules();
 });
@@ -22,4 +22,10 @@ test("lanza error si falta sku o nombre", () => {
   expect(() => crearProducto({ sku: "Mose" })).toThrow(
     "SKU y nombre son obligatorios",
   );
+});
+
+test("obtenerVersion retorna la versión de la API", () => {
+  const { obtenerVersion } = require("./inventoryService");
+  const resultado = obtenerVersion();
+  expect(resultado).toEqual({ version: "1.0.0" });
 });
