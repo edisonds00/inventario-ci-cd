@@ -34,5 +34,5 @@ module.exports = {
   listarProductos,
   obtenerVersion,
   validarProducto,
-  formatearProducto,
+  formatearProducto
 };
