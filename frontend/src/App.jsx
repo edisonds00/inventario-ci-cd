@@ -2,13 +2,16 @@ import { useEffect, useState } from "react";
 //import reactLogo from './assets/react.svg'
 //import viteLogo from '/vite.svg'
 import './App.css'
-const API_URL = 'http://localhost:3000/api/productos';
+import { set } from "../../backend/src/app";
+const API_URL = 'http://localhost:3000/api/products';
 function App() {
   // Lista de productos ya cargados desde el backend
   const [productos, setProductos] = useState([]);
   // Campos del formulario
   const [sku, setSku] = useState('');
   const [nombre, setNombre] = useState('');
+  const [editandoSku, setEditandoSku] = useState(null);
+  const [mensajeError, setMensajeError] = useState('');
   // Cargar productos al inicio
   useEffect(() => {
     fetch(API_URL)
@@ -16,25 +19,70 @@ function App() {
       .then((json) => setProductos(json.data ?? []))
       .catch((err) => console.error('Error cargando productos', err));
   }, []);
-  // Manejar envío del formulario
+  
+  // Manejar envío del formulario (crear o actualizar)
   const handleSubmit = async (e) => {
-    e.preventDefault(); // evitar recarga de la página
-    const nuevo = { sku, nombre };
-    const resp = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(nuevo)
-    });
-    if (resp.ok) {
-      const json = await resp.json();
-      // Añadir producto a la lista en pantalla
-      setProductos((prev) => [...prev, json.data]);
-      // Limpiar campos
-      setSku('');
-      setNombre('');
+    e.preventDefault();
+    setMensajeError('');
+
+    if (editandoSku) {
+      // Modo edición: PUT
+      try {
+        const resp = await fetch(`${API_URL}/${editandoSku}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nombre })
+        });
+        if (resp.ok) {
+          const json = await resp.json();
+          setProductos(prev =>
+            prev.map(p => p.sku === editandoSku ? json.data : p)
+          );
+          // Limpiar formulario
+          setSku('');
+          setNombre('');
+          setEditandoSku(null);
+        } else {
+          const errorData = await resp.json();
+          setMensajeError(errorData.message || 'Error al actualizar');
+        }
+      } catch (err) {
+        setMensajeError('Error de conexión');
+      }
     } else {
-      alert('Error al crear producto');
+      // Modo creación: POST
+      const nuevo = { sku, nombre };
+      const resp = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(nuevo)
+      });
+      if (resp.ok) {
+        const json = await resp.json();
+        setProductos(prev => [...prev, json.data]);
+        setSku('');
+        setNombre('');
+      } else {
+        const errorData = await resp.json();
+        setMensajeError(errorData.message || 'Error al crear');
+      }
     }
+  };
+
+  // Preparar edición
+  const handleEdit = (producto) => {
+    setSku(producto.sku);
+    setNombre(producto.nombre);
+    setEditandoSku(producto.sku);
+    setMensajeError('');
+  };
+
+  // Cancelar edición
+  const handleCancelEdit = () => {
+    setSku('');
+    setNombre('');
+    setEditandoSku(null);
+    setMensajeError('');
   };
   /*function App() {
   const [count, setCount] = useState(0)*/
@@ -45,9 +93,12 @@ function App() {
         <div>
           <label>SKU:</label>
           <input
+            type="text"
             value={sku}
             onChange={(e) => setSku(e.target.value)}
-            placeholder="A-001"
+            placeholder="SKU"
+            disabled={!!editandoSku} // No se puede cambiar el SKU al editar
+            required
           />
         </div>
         <div>
@@ -55,11 +106,15 @@ function App() {
           <input
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
-            placeholder="Cable HDMI"
+            placeholder="Nombre"
+            type="text"
+            required
           />
         </div>
-        <button type="submit">Crear producto</button>
+        <button type="submit">{editandoSku ? 'Actualizar producto' : 'Crear producto'}</button>
+        {editandoSku && <button type="button" onClick={handleCancelEdit}>Cancelar</button>}
       </form>
+      {mensajeError && <p style={{ color: 'red' }}>{mensajeError}</p>}
       <hr />
       <h2>Productos actuales</h2>
       <ul>
